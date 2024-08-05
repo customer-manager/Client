@@ -65,7 +65,7 @@ class Calendar extends Component<{}, CalendarState> {
             EndTime: new Date(2024, 6, 20, 10, 0),
             PhoneNumber: '1234567890',
             Job: 'Kemal Yılmaz',
-            attendanceStatus: 'Gelmedi' // Initial status
+            attendanceStatus: 'Gelmedi'
           }
         ],
         fields: {
@@ -75,10 +75,10 @@ class Calendar extends Component<{}, CalendarState> {
           startTime: { name: 'StartTime', title: 'Başlama Zamanı' },
           endTime: { name: 'EndTime', title: 'Bitiş Zamanı' },
           description: { name: 'Job', title: 'Yapılacak İşlem' },
-          isAllDay: { name: 'attendanceStatus', title: 'Gelme Durumu' } // Changed to attendanceStatus
+          isAllDay: { name: 'attendanceStatus', title: 'Gelme Durumu' } 
         }
       },
-      attendanceStatus: 'Gelmedi' // Initial status
+      attendanceStatus: 'Gelmedi'
     };
   }
 
@@ -104,8 +104,8 @@ class Calendar extends Component<{}, CalendarState> {
       { text: 'Kemal Yılmaz', id: 1, Color: "blue" },
       { text: 'Şueda', id: 2, Color: "green" },
       { text: 'Ayşegül Kölr', id: 3, Color: "grey" },
-      { text: 'Gizem Filiz', id: 4, Color: "purple" },
-      { text: 'Nazan Dalkılıç', id: 5, Color: "red" }
+      { text: 'Gizem Filiz', id: 4, Color: "red" },
+      { text: 'Nazan Dalkılıç', id: 5, Color: "grey" }
     ],
     textField: 'text',
     idField: 'id'
@@ -212,7 +212,7 @@ class Calendar extends Component<{}, CalendarState> {
           currentView='Day'
           eventSettings={this.state.localData}
           timeScale={this.timeScale}
-          workHours={{ start: '08:00', end: '20:30' }}
+          workHours={{ start: '08:00', end: '20:30' ,highlight:true}}
           startHour='08:00'
           endHour='20:30'
           group={this.group}

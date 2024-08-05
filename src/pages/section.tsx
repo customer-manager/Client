@@ -6,7 +6,9 @@ const Section=()=>{
   return (
     <>
     <Navbar></Navbar>
+    <div style={{marginTop:"120px"}}>
     <Calendar></Calendar>
+    </div>
     </>
   )
 }

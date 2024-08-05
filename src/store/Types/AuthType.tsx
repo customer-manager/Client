@@ -6,9 +6,7 @@ export type GuardProps = {
 
 export type UserProfile = {
   id?: string;
-  email?: string;
-  name?: string;
-  role?: string;
+  username?: string;
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string | null;
@@ -19,7 +17,7 @@ export interface AuthProps {
   isInitialized?: boolean;
   user?: UserProfile | null;
   token?: string | null;
-  email?: string | null;
+  username?: string | null;
   verified?: boolean | null;
 }
 
@@ -43,12 +41,9 @@ export type JWTContextType = {
   isInitialized?: boolean;
   user?: UserProfile | null | undefined;
   token?: string | null;
-  email?: string | null;
+  username?: string | null;
   logout: () => void;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
-  forgotPassword: (email: string) => Promise<[boolean, string?]>;
-  resetPassword: (email: string) => Promise<[boolean, string?]>;
   updateProfile: VoidFunction;
   verifyCode: (code: string) => Promise<[boolean, string?]>;
 };

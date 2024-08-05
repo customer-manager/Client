@@ -2,7 +2,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../utils/axios';
 
 interface AuthDto {
-    email: string;
+    username: string;
     password: string;
 }
 
@@ -28,3 +28,5 @@ export const loginThunk = createAsyncThunk<LoginResponse, AuthDto, { rejectValue
         }
     }
 );
+
+

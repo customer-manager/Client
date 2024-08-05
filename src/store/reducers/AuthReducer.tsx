@@ -15,13 +15,6 @@ export const initialState: AuthProps = {
 
 const authReducer = (state = initialState, action: AuthActionProps) => {
   switch (action.type) {
-    case REGISTER: {
-      const { user } = action.payload!;
-      return {
-        ...state,
-        user
-      };
-    }
     case LOGIN: {
       const { user } = action.payload!;
       return {
@@ -47,16 +40,6 @@ const authReducer = (state = initialState, action: AuthActionProps) => {
         isInitialized: true,
         isLoggedIn: false,
         user: null
-      };
-    }
-    case FORGOT_PASSWORD: {
-      const { email, token } = action.payload!;
-      return {
-        ...state,
-        isInitialized: true,
-        isLoggedIn: false,
-        email,
-        token: token
       };
     }
     default: {

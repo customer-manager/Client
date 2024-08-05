@@ -81,7 +81,7 @@ export const JWTProvider = ({ children }: { children: ReactElement }) => {
       if (refreshToken) {
         try {
           const response = await axios.post(`${BASE_URL}/api/v1/auth/refresh`, { refreshToken });
-          const { accessToken } = response.data.data;
+          const { accessToken } = response.data;
           if (accessToken) {
             localStorage.setItem('serviceToken', accessToken);
             setSession(accessToken);
@@ -112,14 +112,14 @@ export const JWTProvider = ({ children }: { children: ReactElement }) => {
         if (serviceToken && verifyToken(serviceToken)) {
           setSession(serviceToken);
           const response = await axios.get(`${BASE_URL}/api/v1/auth/me`);
-          const user = response.data.data;
+          const user = response.data;
           localStorage.setItem('userId', user.id);
           dispatch({ type: LOGIN, payload: { isLoggedIn: true, user } });
           startRefreshTimer(serviceToken);
         } else if (refreshToken) {
           try {
             const response = await axios.post(`${BASE_URL}/api/v1/auth/refresh`, { refreshToken });
-            const { accessToken } = response.data.data;
+            const { accessToken } = response.data;
             if (accessToken) {
               localStorage.setItem('serviceToken', accessToken);
               setSession(accessToken);
@@ -148,85 +148,42 @@ export const JWTProvider = ({ children }: { children: ReactElement }) => {
     return () => clearTimeout(refreshTimer);
   }, [dispatch, state.isLoggedIn]);
 
-  const login = async (email: string, password: string) => {
-    const response = await axios.post(`${BASE_URL}/api/v1/auth/login`, { email, password });
-    console.log(response);
-    const { accessToken, refreshToken } = response.data.data;
+  const login = async (username: string, password: string) => {
+    const response = await axios.post(`${BASE_URL}/api/v1/auth/login`, { username, password });
+    console.log(response.data);
+    const { accessToken, refreshToken } = response.data;
     console.log(accessToken, refreshToken);
     localStorage.setItem('refreshToken', refreshToken);
     if (accessToken) {
+      console.log("accessToken exists");
       setSession(accessToken);
       dispatch({ type: LOGIN, payload: { isLoggedIn: true } });
-      startRefreshTimer(accessToken); // Yeni token için timer başlat
+      startRefreshTimer(accessToken);
     }
-  };
-
-  const register = async (email: string, password: string, firstName: string, lastName: string) => {
-    const id = chance.bb_pin();
-    const response = await axios.post(`${BASE_URL}/api/account/register`, { id, email, password, firstName, lastName });
-    let users = response.data;
-
-    if (window.localStorage.getItem('users')) {
-      const localUsers = window.localStorage.getItem('users');
-      users = [...JSON.parse(localUsers!), { id, email, password, name: `${firstName} ${lastName}` }];
-    }
-
-    window.localStorage.setItem('users', JSON.stringify(users));
   };
 
   const logout = () => {
     setSession(null);
     dispatch({ type: LOGOUT });
-    clearTimeout(refreshTimer); // Timer'ı durdur
-  };
-
-  const forgotPassword = async (email: string): Promise<[boolean, string?]> => {
-    try {
-      const response = await axios.post(`${BASE_URL}/api/v1/auth/forgot-password`, { email });
-      const { success } = response.data;
-      if (success === true) {
-        dispatch({ type: FORGOT_PASSWORD, payload: { isLoggedIn: false, email } });
-        return [true, `Doğrulama kodu ${email} adresinize gönderildi. Lütfen kontrol edin`];
-      } else {
-        return [false];
-      }
-    } catch (error: any) {
-      return [false, error.error.message];
-    }
+    clearTimeout(refreshTimer);
   };
 
   const verifyCode = async (code: string): Promise<[boolean, string?]> => {
     try {
-      const email = state.email;
-      if (!email) {
+      const username = state.username;
+      if (!username) {
         return [false, 'Hata Oluştu'];
       }
-      const response = await axios.post(`${BASE_URL}/api/v1/auth/confirm-reset-password-code`, { email, code });
-      const { token } = response.data.data;
+      const response = await axios.post(`${BASE_URL}/api/v1/auth/confirm-reset-password-code`, { username, code });
+      const { token } = response.data;
       if (token) {
-        dispatch({ type: FORGOT_PASSWORD, payload: { isLoggedIn: false, email, token, verified: true } });
+        dispatch({ type: FORGOT_PASSWORD, payload: { isLoggedIn: false, username, token, verified: true } });
         return [true];
       } else {
         return [false];
       }
     } catch (error: any) {
       return [false, error.error.message];
-    }
-  };
-
-  const resetPassword = async (password: string): Promise<[boolean, string?]> => {
-    const token = state.token;
-    if (!token) {
-      return [false, 'token error'];
-    }
-
-    const response = await axios.post(`${BASE_URL}/api/v1/auth/reset-password`, { token, password });
-    const { success } = response.data;
-    if (success) {
-      dispatch({ type: FORGOT_PASSWORD, payload: { isLoggedIn: false, email: state.email, token: '', verified: false } });
-      return [true];
-    } else {
-      return [false];
     }
   };
 
@@ -237,7 +194,7 @@ export const JWTProvider = ({ children }: { children: ReactElement }) => {
   }
 
   return (
-    <JWTContext.Provider value={{ ...state, login, logout, register, forgotPassword, resetPassword, updateProfile, verifyCode }}>
+    <JWTContext.Provider value={{ ...state, login, logout, updateProfile, verifyCode }}>
       {children}
     </JWTContext.Provider>
   );
