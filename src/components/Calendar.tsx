@@ -13,9 +13,13 @@ import {
   ActionEventArgs
 } from '@syncfusion/ej2-react-schedule';
 import { registerLicense, L10n } from '@syncfusion/ej2-base';
-import { FormValidator } from "@syncfusion/ej2-inputs";
-import "../styles/Calendar.css";
+import { connect } from 'react-redux'; // Import connect
+import { ThunkDispatch } from 'redux-thunk';
+import { RootState } from '../store/store'; // Import your root state type
+import { CreateCustomerThunk,FindAllCustomersThunk } from '../store/Thunk/CustomerThunk';
+import { FormValidator } from '@syncfusion/ej2-inputs';
 
+// Register Syncfusion license and localization
 const licenseKey = process.env.REACT_APP_SYNCFUSION_LICENSE || 'default_license_key';
 registerLicense(licenseKey);
 
@@ -36,7 +40,7 @@ L10n.load({
       'title': 'Hasta İsmi',
       'location': 'Telefon Numarası',
       'Add Event': 'Yeni Hasta Kayıt',
-      'Edit Event':'Kayıt güncelle',
+      'Edit Event': 'Kayıt güncelle',
       'saveButton': 'Kaydet',
       'cancelButton': 'İptal',
       'deleteButton': 'Sil',
@@ -51,8 +55,17 @@ interface CalendarState {
   attendanceStatus: string;
 }
 
-class Calendar extends Component<{}, CalendarState> {
-  constructor(props: {}) {
+interface CalendarProps {
+  dispatch: ThunkDispatch<RootState, undefined, any>;
+}
+
+class Calendar extends Component<CalendarProps, CalendarState> {
+  // Declare the scheduleObj property with the correct type
+  // Declare the scheduleObj property with the correct type
+  private scheduleObj: ScheduleComponent | null = null;
+
+
+  constructor(props: CalendarProps) {
     super(props);
 
     this.state = {
@@ -75,7 +88,7 @@ class Calendar extends Component<{}, CalendarState> {
           startTime: { name: 'StartTime', title: 'Başlama Zamanı' },
           endTime: { name: 'EndTime', title: 'Bitiş Zamanı' },
           description: { name: 'Job', title: 'Yapılacak İşlem' },
-          isAllDay: { name: 'attendanceStatus', title: 'Gelme Durumu' } 
+          isAllDay: { name: 'attendanceStatus', title: 'Gelme Durumu' }
         }
       },
       attendanceStatus: 'Gelmedi'
@@ -181,13 +194,24 @@ class Calendar extends Component<{}, CalendarState> {
   private onActionBegin = (args: ActionEventArgs): void => {
     if (args.requestType === 'eventCreate' || args.requestType === 'eventChange') {
       const data = args.data as Record<string, any>;
-      
+
       const statusElement = document.querySelector('input[name="attendanceStatus"]:checked') as HTMLInputElement;
       if (statusElement) {
         data.attendanceStatus = statusElement.value;
       }
 
-      console.log("Form Data:", data);
+      const savedData = {
+        customer_name: data[0].PatientName,
+        phone_number: data[0].PhoneNumber,
+        specialist_id: data[0].SpecialistId,
+        appointment_start_date: new Date(data[0].StartTime).toISOString(), // Date format
+        appointment_end_date: new Date(data[0].EndTime).toISOString(), // Date format
+        job: data[0].Job,
+        status: data.attendanceStatus === "Gelmedi" ? false : true // Boolean conversion
+      };
+
+      // Updated line
+      this.props.dispatch(CreateCustomerThunk(savedData) as any);
 
       this.setState({ attendanceStatus: data.attendanceStatus });
     }
@@ -195,39 +219,41 @@ class Calendar extends Component<{}, CalendarState> {
 
   private eventTemplate = (props: any): string => {
     return `
-      <div className=''>
-        <div><strong>Hasta İsmi: </strong>${props.PatientName}</div>
-        <div>${props.Job}</div>
+      <div class="e-appointment-details">
+        <div class="e-subject">${props.PatientName}</div>
+        <div class="e-location">${props.PhoneNumber}</div>
+        <div class="e-description">${props.Job}</div>
+        <div class="e-status">${props.attendanceStatus}</div>
       </div>
     `;
   };
 
-  private scheduleObj: ScheduleComponent | null = null;
-
-  public render(): React.ReactNode {
+  render() {
     return (
-      <div>
-        <ScheduleComponent
-          ref={schedule => this.scheduleObj = schedule}
-          currentView='Day'
-          eventSettings={this.state.localData}
-          timeScale={this.timeScale}
-          workHours={{ start: '08:00', end: '20:30' ,highlight:true}}
-          startHour='08:00'
-          endHour='20:30'
-          group={this.group}
-          resources={this.resources}
-          popupOpen={this.onPopupOpen}
-          actionBegin={this.onActionBegin}
-          eventRendered={(args) => {
-            args.element.innerHTML = this.eventTemplate(args.data);
-          }}
-        >
-          <Inject services={[Day, Week, WorkWeek, Month, Agenda]} />
-        </ScheduleComponent>
-      </div>
+      <ScheduleComponent
+        ref={(schedule: ScheduleComponent | null) => this.scheduleObj = schedule}
+        currentView='Day'
+        eventSettings={this.state.localData}
+        timeScale={this.timeScale}
+        workHours={{ start: '08:00', end: '20:30', highlight: true }}
+        startHour='08:00'
+        endHour='20:30'
+        group={this.group}
+        resources={this.resources}
+        actionBegin={this.onActionBegin}
+        popupOpen={this.onPopupOpen}
+      >
+        <Inject services={[Day, Week, WorkWeek, Month, Agenda]} />
+      </ScheduleComponent>
+
+
     );
   }
 }
 
-export default Calendar;
+// Connect Calendar to Redux
+const mapDispatchToProps = (dispatch: ThunkDispatch<RootState, undefined, any>) => ({
+  dispatch
+});
+
+export default connect(null, mapDispatchToProps)(Calendar);
