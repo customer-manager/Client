@@ -16,7 +16,7 @@ import { registerLicense, L10n } from '@syncfusion/ej2-base';
 import { connect } from 'react-redux'; // Import connect
 import { ThunkDispatch } from 'redux-thunk';
 import { RootState } from '../store/store'; // Import your root state type
-import { CreateCustomerThunk,FindAllCustomersThunk } from '../store/Thunk/CustomerThunk';
+import { CreateCustomerThunk,FindAllCustomersThunk ,DeleteCustomerThunk} from '../store/Thunk/CustomerThunk';
 import { FormValidator } from '@syncfusion/ej2-inputs';
 import "../styles/Calendar.css";
 
@@ -227,6 +227,13 @@ class Calendar extends Component<CalendarProps, CalendarState> {
       this.props.dispatch(CreateCustomerThunk(savedData) as any);
 
       this.setState({ attendanceStatus: data.attendanceStatus });
+    }
+
+    if (args.requestType === 'eventRemove') {
+      const id = (args.data as Record<string, any>)[0].Id;
+  
+      this.props.dispatch(DeleteCustomerThunk(id) as any);
+      console.log("customer deleted successfully!");
     }
   }
 
