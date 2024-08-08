@@ -18,6 +18,7 @@ import { ThunkDispatch } from 'redux-thunk';
 import { RootState } from '../store/store'; // Import your root state type
 import { CreateCustomerThunk,FindAllCustomersThunk } from '../store/Thunk/CustomerThunk';
 import { FormValidator } from '@syncfusion/ej2-inputs';
+import "../styles/Calendar.css";
 
 // Register Syncfusion license and localization
 const licenseKey = process.env.REACT_APP_SYNCFUSION_LICENSE || 'default_license_key';
@@ -56,7 +57,7 @@ interface CalendarState {
 }
 
 interface CalendarProps {
-  dispatch: ThunkDispatch<RootState, undefined, any>;
+  dispatch: any;
 }
 
 class Calendar extends Component<CalendarProps, CalendarState> {
@@ -71,15 +72,6 @@ class Calendar extends Component<CalendarProps, CalendarState> {
     this.state = {
       localData: {
         dataSource: [
-          {
-            Id: 1,
-            PatientName: 'Hasta 1',
-            StartTime: new Date(2024, 6, 20, 9, 30),
-            EndTime: new Date(2024, 6, 20, 10, 0),
-            PhoneNumber: '1234567890',
-            Job: 'Kemal Yılmaz',
-            attendanceStatus: 'Gelmedi'
-          }
         ],
         fields: {
           id: 'Id',
@@ -93,6 +85,27 @@ class Calendar extends Component<CalendarProps, CalendarState> {
       },
       attendanceStatus: 'Gelmedi'
     };
+  }
+
+  async componentDidMount() {
+    const customers = await this.props.dispatch(FindAllCustomersThunk());
+
+    console.log("customers=",customers);
+    this.setState({
+      localData: {
+        ...this.state.localData,
+        dataSource: customers.payload.map((customer: any) => ({
+          Id: customer.id,
+          PatientName: customer.customer_name,
+          StartTime: new Date(customer.appointment_start_date),
+          SpecialistId: customer.specialist_id,
+          EndTime: new Date(customer.appointment_end_date),
+          PhoneNumber: customer.phone_number,
+          Job: customer.job,
+          attendanceStatus: false
+        }))
+      }
+    });
   }
 
   private views: ViewsModel[] = [

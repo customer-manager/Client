@@ -2,6 +2,8 @@ import { BrowserRouter,Routes,Route } from "react-router-dom";
 import Section from "./pages/section";
 import LoginPage from "./pages/login";
 import AuthGuard from "./utils/route-guard/authGuard";
+import Deneme from "./components/Deneme";
+import Calendar from "./components/Calendar";
 
 const App=()=>{
   return (
@@ -10,6 +12,7 @@ const App=()=>{
     <Routes>
       <Route path="/" element={<AuthGuard><Section></Section></AuthGuard>}></Route>
       <Route path="/login" element={<LoginPage></LoginPage>}></Route>
+      <Route path="/deneme" element={<Calendar></Calendar>}></Route>
     </Routes>
     </BrowserRouter>
     </>
