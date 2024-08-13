@@ -1,15 +1,17 @@
 import { useNavigate } from "react-router-dom";
-import React from "react";
+import React, { useState } from "react";
 import { Dropdown } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import useAuth from "../hooks/useAuth";
 import { useDispatch } from "react-redux";
 import { fetchCustomersBySearchText } from "../store/Thunk/SearchThunk";
 import { AppDispatch } from "../store/store";
+import SearchBox from "./SearchBox";
 
 
 
 const Navbar: React.FC<any> = () => {
+    const [search,setSearch]=useState<any>();
     const { logout } = useAuth();
     const navigate = useNavigate();
     const dispatch=useDispatch<AppDispatch>();
@@ -20,6 +22,7 @@ const Navbar: React.FC<any> = () => {
     };
 
     const handleChange = async(text: string) => {
+        setSearch(text);
         const customers=await dispatch(fetchCustomersBySearchText(text));
     };
 
@@ -113,6 +116,7 @@ const Navbar: React.FC<any> = () => {
                     </div>
                 </div>
             </header>
+            <SearchBox search={search}></SearchBox>
         </React.Fragment>
     );
 };

@@ -20,7 +20,7 @@ const formatDate = (dateString: string) => {
     return `${date.toLocaleDateString('tr-TR', optionsDate)} saat ${date.toLocaleTimeString('tr-TR', optionsTime)}`;
 };
 
-const SearchBox = () => {
+const SearchBox = (props:any) => {
     const dispatch = useDispatch();
     const customers = useSelector((state: RootState) => state.searchText.customers);
 
@@ -35,7 +35,7 @@ const SearchBox = () => {
     return (
         <div className="search-box-container">
             <div className="row justify-content-center">
-                {customers && customers.length > 0 ? (
+                {customers && props.search && customers.length > 0 ? (
                     customers.map((customer, index) => (
                         <div key={index} className="col-md-8 col-xl-6 mb-3">
                             <div className="card bg-c-blue order-card">
