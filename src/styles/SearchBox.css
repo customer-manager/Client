@@ -1,0 +1,39 @@
+.search-box-container {
+    margin-top: 150px; /* Daha makul bir margin */
+}
+
+.order-card {
+    color: #fff;
+    border-radius: 10px; /* Daha yuvarlak köşeler */
+    padding: 20px;
+}
+
+.bg-c-blue {
+    background: linear-gradient(45deg, #4099ff, #73b4ff);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.icon-size {
+    font-size: 30px; /* İkon boyutunu büyütme */
+}
+
+.f-left {
+    margin-right: 10px; /* İkon ve metin arasına boşluk ekleme */
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mb-2 {
+    margin-bottom: 10px; /* Aralıkları biraz daha genişletme */
+}

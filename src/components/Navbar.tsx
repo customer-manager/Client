@@ -1,28 +1,27 @@
-import { Link, useNavigate } from "react-router-dom";
-import React, { useReducer } from "react";
+import { useNavigate } from "react-router-dom";
+import React from "react";
 import { Dropdown } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import useAuth from "../hooks/useAuth";
+import { useDispatch } from "react-redux";
+import { fetchCustomersBySearchText } from "../store/Thunk/SearchThunk";
+import { AppDispatch } from "../store/store";
 
 
-interface HeaderProps {
-    themeMode?: string; // Define the type for themeMode
-    changeThemeMode?: any;
-    toogleSidebarHide?: () => void;
-    toogleMobileSidebarHide?: () => void;
-    handleOffcanvasToggle?: () => void;
-}
 
+const Navbar: React.FC<any> = () => {
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+    const dispatch=useDispatch<AppDispatch>();
 
-const Navbar = ({ handleOffcanvasToggle, changeThemeMode, toogleSidebarHide, toogleMobileSidebarHide }: HeaderProps) => {
-
-    const {logout}=useAuth();
-    const navigate=useNavigate();
-    
-    const handleLogout = (e:any) => {
+    const handleLogout = () => {
         logout();
         navigate("/login");
-    }
+    };
+
+    const handleChange = async(text: string) => {
+        const customers=await dispatch(fetchCustomersBySearchText(text));
+    };
 
     return (
         <React.Fragment>
@@ -31,7 +30,9 @@ const Navbar = ({ handleOffcanvasToggle, changeThemeMode, toogleSidebarHide, too
                     <div className="me-auto pc-mob-drp">
                         <ul className="list-unstyled">
                             <li className="pc-h-item pc-sidebar-collapse">
-                                <h4 style={{marginRight:"25px"}}>Dream <h6><small>güzellik merkezi</small></h6> </h4>
+                                <h4 style={{ marginRight: "25px" }}>
+                                    Dream <h6><small>güzellik merkezi</small></h6>
+                                </h4>
                             </li>
                             <Dropdown as="li" className="pc-h-item d-inline-flex d-md-none">
                                 <Dropdown.Toggle as="a" className="pc-head-link arrow-none m-0" data-bs-toggle="dropdown" href="#" role="button"
@@ -41,7 +42,7 @@ const Navbar = ({ handleOffcanvasToggle, changeThemeMode, toogleSidebarHide, too
                                 <Dropdown.Menu className="pc-h-dropdown drp-search">
                                     <form className="px-3">
                                         <div className="form-group mb-0 d-flex align-items-center">
-                                            <input type="search" className="form-control border-0 shadow-none" placeholder="Search here. . ." />
+                                            <input type="text" className="form-control border-0 shadow-none" placeholder="Search here. . ." />
                                             <button className="btn btn-light-secondary btn-search">Search</button>
                                         </div>
                                     </form>
@@ -50,7 +51,7 @@ const Navbar = ({ handleOffcanvasToggle, changeThemeMode, toogleSidebarHide, too
                             <li className="pc-h-item d-none d-md-inline-flex">
                                 <form className="form-search">
                                     <i className="ph-duotone ph-magnifying-glass icon-search"></i>
-                                    <input type="search" className="form-control" placeholder="Arama yap..." />
+                                    <input type="search" className="form-control" placeholder="Arama yap..." onChange={(e:any) => handleChange(e.target.value)}/>
                                     <button className="btn btn-search" style={{ padding: "0" }}><kbd>ctrl+k</kbd></button>
                                 </form>
                             </li>
@@ -65,11 +66,7 @@ const Navbar = ({ handleOffcanvasToggle, changeThemeMode, toogleSidebarHide, too
                                     <i className="ph-duotone ph-diamonds-four"></i>
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu className="dropdown-menu-end pc-h-dropdown">
-                                    <Dropdown.Item>
-                                        <i className="ph-duotone ph-user"></i>
-                                        <span>My Account</span>
-                                    </Dropdown.Item>
-                                    <Dropdown.Item onClick={(e: any) => handleLogout(e)}>
+                                    <Dropdown.Item onClick={handleLogout}>
                                         <i className="ph-duotone ph-power"></i>
                                         <span>Çıkış yap</span>
                                     </Dropdown.Item>
@@ -88,18 +85,12 @@ const Navbar = ({ handleOffcanvasToggle, changeThemeMode, toogleSidebarHide, too
                                             <ul className="list-group list-group-flush w-100">
                                                 <li className="list-group-item">
                                                     <div className="d-flex align-items-center">
-                                                        <div className="flex-shrink-0">
-                                                        </div>
                                                         <div className="flex-grow-1 mx-3">
-                                                            <h5 className="mb-0">Carson Darrin</h5>
-                                                            <a className="link-primary" href="mailto:carson.darrin@company.io">carson.darrin@company.io</a>
                                                         </div>
                                                         <span className="badge bg-primary">PRO</span>
                                                     </div>
                                                 </li>
-                                                
                                                 <li className="list-group-item">
-                                                    
                                                     <Dropdown.Item>
                                                         <span className="d-flex align-items-center">
                                                             <i className="ph-duotone ph-bell"></i>
@@ -113,7 +104,6 @@ const Navbar = ({ handleOffcanvasToggle, changeThemeMode, toogleSidebarHide, too
                                                         </span>
                                                     </Dropdown.Item>
                                                 </li>
-                                               
                                             </ul>
                                         </SimpleBar>
                                     </div>

@@ -87,12 +87,11 @@ export const DeleteCustomerThunk = createAsyncThunk<CustomerDto, string, { rejec
 );
 
 
-//update later
-export const UpdateCustomerThunk = createAsyncThunk<CustomerDto, number, { rejectValue: CustomerError }>(
+export const UpdateCustomerThunk = createAsyncThunk<CustomerDto, CustomerDto, { rejectValue: CustomerError }>(
     'customer/update',
-    async (id, { rejectWithValue }) => {
+    async (customerDto: CustomerDto, { rejectWithValue }) => {
         try {
-            const response = await axios.put(`/customer/${id}`);
+            const response = await axios.put(`/customer/${customerDto.id}`, customerDto);
             return response.data;
         } catch (error: any) {
             if (error.response && error.response.data) {
@@ -102,6 +101,7 @@ export const UpdateCustomerThunk = createAsyncThunk<CustomerDto, number, { rejec
         }
     }
 );
+
 
 
 

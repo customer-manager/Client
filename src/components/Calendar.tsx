@@ -7,20 +7,18 @@ import {
   WorkWeek,
   Month,
   Agenda,
-  EventSettingsModel,
   ViewsModel,
   PopupOpenEventArgs,
   ActionEventArgs
 } from '@syncfusion/ej2-react-schedule';
 import { registerLicense, L10n } from '@syncfusion/ej2-base';
-import { connect } from 'react-redux'; // Import connect
+import { connect } from 'react-redux'; 
 import { ThunkDispatch } from 'redux-thunk';
-import { RootState } from '../store/store'; // Import your root state type
-import { CreateCustomerThunk,FindAllCustomersThunk ,DeleteCustomerThunk} from '../store/Thunk/CustomerThunk';
+import { RootState } from '../store/store';
+import { CreateCustomerThunk,FindAllCustomersThunk ,DeleteCustomerThunk,UpdateCustomerThunk} from '../store/Thunk/CustomerThunk';
 import { FormValidator } from '@syncfusion/ej2-inputs';
 import "../styles/Calendar.css";
 
-// Register Syncfusion license and localization
 const licenseKey = process.env.REACT_APP_SYNCFUSION_LICENSE || 'default_license_key';
 registerLicense(licenseKey);
 
@@ -31,29 +29,25 @@ L10n.load({
       'week': 'Hafta',
       'month': 'Ay',
       'workWeek': 'Haftaiçi',
-      'sunday': 'Pazar',
-      'monday': 'Pazartesi',
-      'tuesday': 'Salı',
-      'wednesday': 'Çarşamba',
-      'thursday': 'Perşembe',
-      'friday': 'Cuma',
-      'saturday': 'Cumartesi',
-      'title': 'Hasta İsmi',
+      'title': 'Müşteri İsmi',
       'location': 'Telefon Numarası',
-      'Add Event': 'Yeni Hasta Kayıt',
+      'Add Event': 'Yeni Müşteri Kayıt',
       'Edit Event': 'Kayıt güncelle',
+      'Delete Event': 'Randevu iptal',
       'saveButton': 'Kaydet',
       'cancelButton': 'İptal',
       'deleteButton': 'Sil',
       'repeat': 'Durum',
-      'newEvent': 'Hasta Kayıt',
+      'newEvent': 'Müşteri Kayıt',
+      'timeFormat': 'HH:mm',
+      'dayOfWeek': ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'],
+      'monthOfYear': ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
     },
   }
 });
 
 interface CalendarState {
-  localData: EventSettingsModel;
-  attendanceStatus: string;
+  localData: any;
 }
 
 interface CalendarProps {
@@ -61,8 +55,6 @@ interface CalendarProps {
 }
 
 class Calendar extends Component<CalendarProps, CalendarState> {
-  // Declare the scheduleObj property with the correct type
-  // Declare the scheduleObj property with the correct type
   private scheduleObj: ScheduleComponent | null = null;
 
 
@@ -75,20 +67,20 @@ class Calendar extends Component<CalendarProps, CalendarState> {
         ],
         fields: {
           id: 'Id',
-          subject: { name: 'PatientName', title: 'Hasta İsmi' },
+          subject: { name: 'PatientName', title: 'Müşteri İsmi' },
           location: { name: 'PhoneNumber', title: 'Telefon Numarası' },
           startTime: { name: 'StartTime', title: 'Başlama Zamanı' },
           endTime: { name: 'EndTime', title: 'Bitiş Zamanı' },
           description: { name: 'Job', title: 'Yapılacak İşlem' },
-          isAllDay: { name: 'attendanceStatus', title: 'Gelme Durumu' }
+          status: { name: 'Status', title: 'Durum' } 
         }
-      },
-      attendanceStatus: 'Gelmedi'
+      }
     };
   }
 
   async componentDidMount() {
-    const customers = await this.props.dispatch(FindAllCustomersThunk());
+    if(localStorage.getItem("serviceToken")){
+      const customers = await this.props.dispatch(FindAllCustomersThunk());
 
     console.log("customers=",customers);
     this.setState({
@@ -102,10 +94,11 @@ class Calendar extends Component<CalendarProps, CalendarState> {
           EndTime: new Date(customer.appointment_end_date),
           PhoneNumber: customer.phone_number,
           Job: customer.job,
-          attendanceStatus: false
+          status:customer.status
         }))
       }
     });
+    }
   }
 
   private views: ViewsModel[] = [
@@ -157,7 +150,17 @@ class Calendar extends Component<CalendarProps, CalendarState> {
   private onPopupOpen = (args: PopupOpenEventArgs): void => {
     if (args.type === 'QuickInfo') {
       if (args.target && args.target.classList.contains('e-appointment')) {
-        args.cancel = false;
+        console.log("Commmmming data=",args.data);
+        const status = (args.data as any).status==="Geldi" ? 'Geldi' : "Gelmedi";  
+  
+        // Find the resource element in the QuickInfo popup
+        const resourceElement = args.element.querySelector('.e-resource');
+        if (resourceElement) {
+          // Update the existing status element
+          resourceElement.innerHTML = `<div class="e-resource-icon e-icons"></div><div class="e-resource-details e-text-ellipsis">Gelme Durumu: ${status}</div>`;
+        } else {
+          console.error("Resource element not found in QuickInfo popup");
+        }
       } else {
         args.cancel = true;
         if (this.scheduleObj && args.data) {
@@ -165,12 +168,12 @@ class Calendar extends Component<CalendarProps, CalendarState> {
         }
       }
     }
-
     if (args.type === 'Editor') {
+      console.log("Editor init");
       const repeatElement = args.element.querySelector('.e-input-wrapper.e-form-left');
 
       if (repeatElement) {
-        const status = (args.data as any).attendanceStatus || 'Gelmedi'; // Fallback to 'Gelmedi'
+        const status = (args.data as any).status==="Geldi" ? 'Geldi' :'Gelmedi';
         repeatElement.innerHTML = this.radioButtonGenerator(status);
       }
 
@@ -206,36 +209,67 @@ class Calendar extends Component<CalendarProps, CalendarState> {
 
   private onActionBegin = (args: ActionEventArgs): void => {
     if (args.requestType === 'eventCreate' || args.requestType === 'eventChange') {
+      console.log("save or change");
+      
       const data = args.data as Record<string, any>;
-
+      
+      if(args.requestType=="eventChange"){
+        // Extract and update status
       const statusElement = document.querySelector('input[name="attendanceStatus"]:checked') as HTMLInputElement;
       if (statusElement) {
-        data.attendanceStatus = statusElement.value;
+        data.status = statusElement.value;
+      }
+      
+      console.log("updated data status=",data.status);
+      // Prepare data for the thunk
+      const updatedData = {
+        id:data.Id,
+        customer_name: data.PatientName,
+        phone_number: data.PhoneNumber,
+        specialist_id: data.SpecialistId,
+        appointment_start_date: new Date(data.StartTime).toISOString(),
+        appointment_end_date: new Date(data.EndTime).toISOString(),
+        job: data.Job,
+        status: data.status
+      };
+
+      console.log("Updated Data =", updatedData);
+       this.props.dispatch(UpdateCustomerThunk(updatedData) as any);
+
       }
 
-      const savedData = {
+      else if(args.requestType=="eventCreate"){
+        const statusElement = document.querySelector('input[name="attendanceStatus"]:checked') as HTMLInputElement;
+      if (statusElement) {
+        data[0].status = statusElement.value;
+      }
+      
+      // Prepare data[0] for the thunk
+      const updatedData = {
         customer_name: data[0].PatientName,
         phone_number: data[0].PhoneNumber,
         specialist_id: data[0].SpecialistId,
-        appointment_start_date: new Date(data[0].StartTime).toISOString(), // Date format
-        appointment_end_date: new Date(data[0].EndTime).toISOString(), // Date format
+        appointment_start_date: new Date(data[0].StartTime).toISOString(),
+        appointment_end_date: new Date(data[0].EndTime).toISOString(),
         job: data[0].Job,
-        status: data.attendanceStatus === "Gelmedi" ? false : true // Boolean conversion
+        status: data[0].status
       };
 
-      // Updated line
-      this.props.dispatch(CreateCustomerThunk(savedData) as any);
+      console.log("Updated Data =", updatedData);
 
-      this.setState({ attendanceStatus: data.attendanceStatus });
+      this.props.dispatch(CreateCustomerThunk(updatedData) as any);
+
+      }
+    
     }
-
+  
     if (args.requestType === 'eventRemove') {
       const id = (args.data as Record<string, any>)[0].Id;
-  
       this.props.dispatch(DeleteCustomerThunk(id) as any);
-      console.log("customer deleted successfully!");
+      console.log("Customer deleted successfully!");
     }
   }
+  
 
   private eventTemplate = (props: any): string => {
     return `
@@ -243,7 +277,7 @@ class Calendar extends Component<CalendarProps, CalendarState> {
         <div class="e-subject">${props.PatientName}</div>
         <div class="e-location">${props.PhoneNumber}</div>
         <div class="e-description">${props.Job}</div>
-        <div class="e-status">${props.attendanceStatus}</div>
+        <div class="e-status">${props.status}</div>
       </div>
     `;
   };
@@ -255,12 +289,15 @@ class Calendar extends Component<CalendarProps, CalendarState> {
         currentView='Day'
         eventSettings={this.state.localData}
         timeScale={this.timeScale}
-        workHours={{ start: '08:00', end: '20:30', highlight: true }}
+        workHours={{ start: '08:00', end: '21:30', highlight: true }}
         startHour='08:00'
-        endHour='20:30'
+        endHour='21:30'
         group={this.group}
         resources={this.resources}
         actionBegin={this.onActionBegin}
+        timezone='Europe/Istanbul'
+        timeFormat="HH:mm"
+        dateFormat='dd/MM/yyyy'
         popupOpen={this.onPopupOpen}
       >
         <Inject services={[Day, Week, WorkWeek, Month, Agenda]} />
@@ -271,7 +308,6 @@ class Calendar extends Component<CalendarProps, CalendarState> {
   }
 }
 
-// Connect Calendar to Redux
 const mapDispatchToProps = (dispatch: ThunkDispatch<RootState, undefined, any>) => ({
   dispatch
 });
