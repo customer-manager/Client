@@ -72,7 +72,8 @@ class Calendar extends Component<CalendarProps, CalendarState> {
           startTime: { name: 'StartTime', title: 'Başlama Zamanı' },
           endTime: { name: 'EndTime', title: 'Bitiş Zamanı' },
           description: { name: 'Job', title: 'Yapılacak İşlem' },
-          status: { name: 'Status', title: 'Durum' } 
+          status: { name: 'Status', title: 'Durum' } ,
+          PaymentInput:{name:"PaymentInput",title:'Ödeme'}
         }
       }
     };
@@ -94,7 +95,8 @@ class Calendar extends Component<CalendarProps, CalendarState> {
           EndTime: new Date(customer.appointment_end_date),
           PhoneNumber: customer.phone_number,
           Job: customer.job,
-          status:customer.status
+          status:customer.status,
+          PaymentInput:customer.PaymentInput
         }))
       }
     });
@@ -147,6 +149,24 @@ class Calendar extends Component<CalendarProps, CalendarState> {
     `;
   };
 
+  private paymentElementGeneretor=(PaymentInput:any)=>{
+    return `
+    <label>Ödenecek tutar</label>
+      <div class="e-PaymentInput-container">
+        <div class="e-float-input e-control-wrapper e-input-group">
+          <input 
+            class="e-PaymentInput e-field" 
+            type="text" 
+            value=${PaymentInput ? PaymentInput : '0'}
+            name="PaymentInput"
+            id="PaymentInput" 
+            aria-labelledby="label_Payment"
+          >
+        </div>
+      </div>
+    `
+  }
+
   private onPopupOpen = (args: PopupOpenEventArgs): void => {
     if (args.type === 'QuickInfo') {
       if (args.target && args.target.classList.contains('e-appointment')) {
@@ -170,24 +190,41 @@ class Calendar extends Component<CalendarProps, CalendarState> {
     }
     if (args.type === 'Editor') {
       console.log("Editor init");
+      
+      // Var olan elementleri bulalım
       const repeatElement = args.element.querySelector('.e-input-wrapper.e-form-left');
-
+      
+      // Status radio butonlarını ekleyelim
       if (repeatElement) {
         const status = (args.data as any).status==="Geldi" ? 'Geldi' :'Gelmedi';
         repeatElement.innerHTML = this.radioButtonGenerator(status);
       }
-
+      
+      // Ödeme alanını eklemeden önce kontrol edelim
+      if (!args.element.querySelector('.e-PaymentInput-container')) {
+        const paymentElement = this.paymentElementGeneretor((args.data as any).PaymentInput);
+        const paymentElementWrapper = document.createElement('div');
+        paymentElementWrapper.innerHTML = paymentElement;
+    
+        const formElement = args.element.querySelector('.e-schedule-form') as HTMLFormElement;
+        if (formElement) {
+          formElement.appendChild(paymentElementWrapper);
+        }
+      }
+    
+      // Gerekli diğer elementleri bulalım ve gizleyelim
       const alldayCheckBox = args.element.querySelector(".e-all-day");
       const timeZoneCheckBox = args.element.querySelector(".e-time-zone");
-
+      
       if (alldayCheckBox) {
-        alldayCheckBox.id = "displayer";
+        alldayCheckBox.id="displayer"
       }
-
+    
       if (timeZoneCheckBox) {
         timeZoneCheckBox.id = "displayer";
       }
-
+    
+      // Form doğrulama işlemini gerçekleştirelim
       const formElement = args.element.querySelector('.e-schedule-form') as HTMLFormElement;
       if (formElement) {
         const validator = (formElement as any).ej2_instances?.[0] as FormValidator;
@@ -198,7 +235,8 @@ class Calendar extends Component<CalendarProps, CalendarState> {
             'StartTime': { required: true },
             'EndTime': { required: true },
             'Job': { required: true },
-            'attendanceStatus': { required: true }
+            'attendanceStatus': { required: true },
+            'PaymentInput':{required:true}
           };
         }
       } else {
@@ -206,16 +244,21 @@ class Calendar extends Component<CalendarProps, CalendarState> {
       }
     }
   }
+  
+  
 
   private onActionBegin = (args: ActionEventArgs): void => {
     if (args.requestType === 'eventCreate' || args.requestType === 'eventChange') {
       console.log("save or change");
       
       const data = args.data as Record<string, any>;
+
+      console.log("original data=",data);
       
       if(args.requestType=="eventChange"){
         // Extract and update status
       const statusElement = document.querySelector('input[name="attendanceStatus"]:checked') as HTMLInputElement;
+
       if (statusElement) {
         data.status = statusElement.value;
       }
@@ -230,7 +273,8 @@ class Calendar extends Component<CalendarProps, CalendarState> {
         appointment_start_date: new Date(data.StartTime).toISOString(),
         appointment_end_date: new Date(data.EndTime).toISOString(),
         job: data.Job,
-        status: data.status
+        status: data.status,
+        PaymentInput:data.PaymentInput
       };
 
       console.log("Updated Data =", updatedData);
@@ -243,6 +287,8 @@ class Calendar extends Component<CalendarProps, CalendarState> {
       if (statusElement) {
         data[0].status = statusElement.value;
       }
+
+      console.log("gelen veri=",data);
       
       // Prepare data[0] for the thunk
       const updatedData = {
@@ -252,7 +298,8 @@ class Calendar extends Component<CalendarProps, CalendarState> {
         appointment_start_date: new Date(data[0].StartTime).toISOString(),
         appointment_end_date: new Date(data[0].EndTime).toISOString(),
         job: data[0].Job,
-        status: data[0].status
+        status: data[0].status,
+        PaymentInput:data[0].PaymentInput
       };
 
       console.log("Updated Data =", updatedData);
@@ -270,17 +317,6 @@ class Calendar extends Component<CalendarProps, CalendarState> {
     }
   }
   
-
-  private eventTemplate = (props: any): string => {
-    return `
-      <div class="e-appointment-details">
-        <div class="e-subject">${props.PatientName}</div>
-        <div class="e-location">${props.PhoneNumber}</div>
-        <div class="e-description">${props.Job}</div>
-        <div class="e-status">${props.status}</div>
-      </div>
-    `;
-  };
 
   render() {
     return (

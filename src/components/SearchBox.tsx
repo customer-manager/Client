@@ -23,6 +23,13 @@ const formatDate = (dateString: string) => {
 const SearchBox = (props:any) => {
     const dispatch = useDispatch();
     const customers = useSelector((state: RootState) => state.searchText.customers);
+    const specialists:any=[
+        "Kemal Yılmaz",
+        "Şueda",
+        "Ayşegül Kölr",
+        "Gizem Filiz",
+        "Nazan Dalkılıç"
+    ]
 
     useEffect(() => {
         // fetchCustomersBySearchText aksiyonunu dispatch etmeniz gerekebilir
@@ -36,7 +43,7 @@ const SearchBox = (props:any) => {
         <div className="search-box-container">
             <div className="row justify-content-center">
                 {customers && props.search && customers.length > 0 ? (
-                    customers.map((customer, index) => (
+                    customers.map((customer:any, index) => (
                         <div key={index} className="col-md-8 col-xl-6 mb-3">
                             <div className="card bg-c-blue order-card">
                                 <div className="card-body">
@@ -52,6 +59,14 @@ const SearchBox = (props:any) => {
                                     </p>
                                     <p className="mb-2">
                                         <strong>Yapılan işlem:</strong> <span>{customer.job}</span>
+                                    </p>
+
+                                    <p className="mb-2">
+                                        <span>{specialists[customer.specialist_id-1]} tarafından tedavi edildi</span>
+                                    </p>
+
+                                    <p className="mb-2">
+                                        <strong>Kalan borç:</strong> <span>{customer.PaymentInput}₺</span>
                                     </p>
                                     {customer.status==="Geldi" ? <p className="mb-2">
                                         <strong>Randevuya Geldiği Tarih:</strong> <span>{formatDate(customer.appointment_start_date)}</span>
