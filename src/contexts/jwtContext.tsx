@@ -72,7 +72,7 @@ export const JWTProvider = ({ children }: { children: ReactElement }) => {
     const decodedToken = jwtDecode<KeyedObject>(token);
     console.log("token",decodedToken);
     const currentTime = Math.floor(Date.now() / 1000);
-    const timeUntilExpiry = (decodedToken.exp - currentTime) * 1000; // milliseconds
+    const timeUntilExpiry = (decodedToken.exp - currentTime) * 2500; // milliseconds
 
     // Süre dolduğunda refresh işlemini başlat
     refreshTimer = setTimeout(async () => {
